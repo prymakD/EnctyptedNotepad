@@ -1,11 +1,9 @@
 package com.enctyptednotepad;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -14,11 +12,14 @@ public class MainActivity extends AppCompatActivity {
     private EditText eName;
     private EditText ePassword;
     private Button eLogin;
-
-    private String Username = "Admin";
-    private String Password = "1234";
+    private TextView eRegister;
+    private CheckBox eRememberMe;
 
     boolean isValid = false;
+
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor sharedPreferencesEditor;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +29,25 @@ public class MainActivity extends AppCompatActivity {
         eName = findViewById(R.id.etName);
         ePassword = findViewById(R.id.etPassword);
         eLogin = findViewById(R.id.etLogin);
+        eRegister = findViewById(R.id.tvRegister);
+        eRememberMe = findViewById(R.id.cbrememberMe);
+
+        sharedPreferences = getApplicationContext().getSharedPreferences("CredentialsDB", MODE_PRIVATE);
+        sharedPreferencesEditor = sharedPreferences.edit();
+
+        if (sharedPreferences != null) {
+            String savedUsername = sharedPreferences.getString("Username", "");
+            String savedPassword = sharedPreferences.getString("Password", "");
+
+            RegistrationActivity.credentials = new Credentials(savedUsername, savedPassword);
+        }
+
+        eRegister.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(MainActivity.this, RegistrationActivity.class));
+            }
+        });
 
         eLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,9 +78,12 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean validate (String name, String password) {
 
-        if (name.equals(Username) && password.equals(Password)) {
-            return true;
+        if (RegistrationActivity.credentials != null) {
+            if (name.equals(RegistrationActivity.credentials.getUsername()) && password.equals(RegistrationActivity.credentials.getPassword())) {
+                return true;
+            }
         }
+
 
         return false;
     }
