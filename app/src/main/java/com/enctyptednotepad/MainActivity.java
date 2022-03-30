@@ -7,6 +7,8 @@ import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
+import java.util.Map;
+
 public class MainActivity extends AppCompatActivity {
 
     private EditText eName;
@@ -16,6 +18,8 @@ public class MainActivity extends AppCompatActivity {
     private CheckBox eRememberMe;
 
     boolean isValid = false;
+
+    public Credentials credentials;
 
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor sharedPreferencesEditor;
@@ -32,14 +36,22 @@ public class MainActivity extends AppCompatActivity {
         eRegister = findViewById(R.id.tvRegister);
         eRememberMe = findViewById(R.id.cbrememberMe);
 
+        credentials = new Credentials();
+
         sharedPreferences = getApplicationContext().getSharedPreferences("CredentialsDB", MODE_PRIVATE);
         sharedPreferencesEditor = sharedPreferences.edit();
 
+        // check whether file sharedPreferences exists and takes cred from there
         if (sharedPreferences != null) {
-            String savedUsername = sharedPreferences.getString("Username", "");
-            String savedPassword = sharedPreferences.getString("Password", "");
 
-            RegistrationActivity.credentials = new Credentials(savedUsername, savedPassword);
+            Map<String, ?> preferencesMap = sharedPreferences.getAll();
+
+            if (preferencesMap.size() != 0) {
+                credentials.loadCredentials(preferencesMap);
+            }
+
+            String savedUsername = sharedPreferences.getString("LastSavedUsername", "");
+            String savedPassword = sharedPreferences.getString("LastSavedPassword", "");
 
             if (sharedPreferences.getBoolean("RememberMeCheckbox", false)) {
                 eName.setText(savedUsername);
@@ -64,13 +76,18 @@ public class MainActivity extends AppCompatActivity {
 
                 if (inputName.isEmpty() || inputPassword.isEmpty()) {
                     Toast.makeText(MainActivity.this, "Short", Toast.LENGTH_LONG).show();
-                } else  {
+                } else {
                     isValid = validate(inputName, inputPassword);
 
                     if (!isValid) {
+
                         Toast.makeText(MainActivity.this, "Wrong login or password", Toast.LENGTH_LONG).show();
+
                     } else {
                         Toast.makeText(MainActivity.this, "Successful", Toast.LENGTH_LONG).show();
+
+                        sharedPreferencesEditor.putString("LastSavedUsername", inputName);
+                        sharedPreferencesEditor.putString("LastSavedPassword", inputPassword);
 
                         sharedPreferencesEditor.putBoolean("RememberMeCheckbox", eRememberMe.isChecked());
 
@@ -85,15 +102,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private boolean validate (String name, String password) {
-
-        if (RegistrationActivity.credentials != null) {
-            if (name.equals(RegistrationActivity.credentials.getUsername()) && password.equals(RegistrationActivity.credentials.getPassword())) {
-                return true;
-            }
-        }
-
-
-        return false;
+    private boolean validate(String name, String password) {
+        return credentials.verifyCredentials(name, password);
     }
 }
