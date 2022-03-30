@@ -40,6 +40,12 @@ public class MainActivity extends AppCompatActivity {
             String savedPassword = sharedPreferences.getString("Password", "");
 
             RegistrationActivity.credentials = new Credentials(savedUsername, savedPassword);
+
+            if (sharedPreferences.getBoolean("RememberMeCheckbox", false)) {
+                eName.setText(savedUsername);
+                ePassword.setText(savedPassword);
+                eRememberMe.setChecked(true);
+            }
         }
 
         eRegister.setOnClickListener(new View.OnClickListener() {
@@ -66,6 +72,9 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         Toast.makeText(MainActivity.this, "Successful", Toast.LENGTH_LONG).show();
 
+                        sharedPreferencesEditor.putBoolean("RememberMeCheckbox", eRememberMe.isChecked());
+
+                        sharedPreferencesEditor.apply();
                         // new activity
 
                         Intent intent = new Intent(MainActivity.this, HomePageActivity.class);
